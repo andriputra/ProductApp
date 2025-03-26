@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TextInput } from 'react-native';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { useDispatch, useSelector } from 'react-redux';
+import { addToCart } from '../redux/cartSlice';
+import { RootState } from '../redux/store';
 
 const { width, height } = Dimensions.get('window');
 
@@ -11,17 +16,37 @@ type Product = {
   price: number;
 };
 
-const ProductDetailScreen = ({ item, onBack, setCartCount }: { item: Product; onBack: () => void; setCartCount?: React.Dispatch<React.SetStateAction<number>> }) => {
+const ProductDetailScreen = ({ item, onBack, setCartCount, cartTotal }: { 
+  item: Product; 
+  onBack: () => void; 
+  setCartCount?: React.Dispatch<React.SetStateAction<number>>; 
+  cartTotal: number;
+}) => {
   const [quantity, setQuantity] = useState(1);
 
-  const addToCart = () => {
-    if (setCartCount) {
-      setCartCount(prev => prev + quantity); // Increment cart count
-      alert(`Added ${quantity} ${item.title} to cart`);
-    } else {
-      console.error("setCartCount is undefined");
-    }
+  const dispatch = useDispatch();
+
+  const addToCartHandler = () => {
+    dispatch(
+      addToCart({ 
+        id: item.id, 
+        title: item.title, 
+        price: item.price, 
+        quantity: quantity, 
+        thumbnail: item.thumbnail,
+      })
+    );
+    alert(`Added ${quantity} ${item.title} to cart`);
   };
+
+  const handleAddToCart = () => {
+      if (setCartCount) {
+        setCartCount(prev => prev + quantity); // Increment cart count
+        alert(`Added ${quantity} ${item.title} to cart`);
+      } else {
+        console.error("setCartCount is undefined");
+      }
+    };
 
   return (
     <View style={styles.container}>
@@ -47,9 +72,10 @@ const ProductDetailScreen = ({ item, onBack, setCartCount }: { item: Product; on
         </ScrollView>
         <View style={styles.buttonContainer}>
           <TouchableOpacity onPress={onBack} style={styles.backButton}>
-            <Text style={styles.backText}>← Back</Text>
+            <FontAwesomeIcon icon={faArrowLeft} size={16} color="#333" />
+            <Text style={styles.backText}> Back</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.cartButton} onPress={addToCart}>
+          <TouchableOpacity style={styles.cartButton} onPress={addToCartHandler}>
             <Text style={styles.cartText}>Add to Cart</Text>
           </TouchableOpacity>
         </View>
@@ -137,6 +163,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     marginRight: 5,
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   backText: {
     color: '#333',

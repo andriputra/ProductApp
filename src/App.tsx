@@ -4,7 +4,6 @@ import { store } from './redux/store';
 import AppNavigator from './navigation/AppNavigator';
 import { enableScreens } from 'react-native-screens';
 enableScreens();
-
 const App = () => {
   return (
     <Provider store={store}>

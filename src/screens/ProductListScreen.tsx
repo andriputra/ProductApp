@@ -3,12 +3,13 @@ import { View, Text, FlatList, TouchableOpacity, Image, TextInput, StyleSheet } 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProducts } from '../redux/productSlice';
 import { RootState, AppDispatch } from '../redux/store';
-import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
+import { TabView, TabBar } from 'react-native-tab-view';
 import ProductDetailScreen from './ProductDetailScreen';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faHeart as solidHeart } from '@fortawesome/free-solid-svg-icons';
+import { faHeart as regularHeart } from '@fortawesome/free-regular-svg-icons';
 
 type Product = { id: number; title: string; category: string; thumbnail: string; price: number };
-
-const categories = ['All', 'Smartphones', 'Laptops', 'Fragrances'];
 
 const ProductListScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -18,21 +19,26 @@ const ProductListScreen = () => {
   const [favorites, setFavorites] = useState<number[]>([]);
   const [screen, setScreen] = useState<'list' | 'detail'>();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [uniqueCategories, setUniqueCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>(['All']);
 
   useEffect(() => {
     dispatch(fetchProducts());
   }, [dispatch]);
 
+  useEffect(() => {
+    if (products.length > 0) {
+      const fetchedCategories = Array.from(new Set(products.map(product => product.category)));
+      setUniqueCategories(fetchedCategories);
+      setCategories(['All', ...fetchedCategories]);
+    }
+  }, [products]);
+
   const toggleFavorite = (id: number) => {
     setFavorites((prev) => (prev.includes(id) ? prev.filter(fav => fav !== id) : [...prev, id]));
   };
 
-  const filteredProducts = products.filter(product => 
-    (index === 0 || product.category === categories[index]) &&
-    product.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const renderProducts = () => (
+  const renderProducts = (filteredProducts: Product[]) => (
     <FlatList
       data={filteredProducts}
       keyExtractor={(item) => item.id.toString()}
@@ -44,9 +50,14 @@ const ProductListScreen = () => {
           <View style={styles.details}>
             <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.price}>${item.price}</Text>
-            <TouchableOpacity onPress={() => toggleFavorite(item.id)} style={styles.favoriteButton}>
-              <Text style={{ color: favorites.includes(item.id) ? 'red' : 'gray' }}>❤️</Text>
-            </TouchableOpacity>
+            <View style={styles.actionArea}>
+              <TouchableOpacity onPress={() => toggleFavorite(item.id)} style={styles.favoriteButton}>
+                <FontAwesomeIcon icon={favorites.includes(item.id) ? solidHeart : regularHeart} size={20} color={favorites.includes(item.id) ? 'red' : 'gray'} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.viewDetailButton} onPress={() => { setSelectedProduct(item); setScreen('detail'); }}>
+                <Text style={styles.viewDetailText}>View Detail</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </TouchableOpacity>
       )}
@@ -67,33 +78,26 @@ const ProductListScreen = () => {
       <TabView
         navigationState={{ 
           index, 
-          routes: categories.map((cat) => ({ key: cat.toLowerCase(), title: cat })) 
+          routes: categories.map((cat) => ({ key: cat.toLowerCase(), title: cat.charAt(0).toUpperCase() + cat.slice(1) })) 
         }}
         renderScene={({ route }) => {
-          switch (route.key) {
-            case 'all':
-              return renderProducts();
-            case 'smartphones':
-              return renderProducts();
-            case 'laptops':
-              return renderProducts();
-            case 'fragrances':
-              return renderProducts();
-            default:
-              return null;
-          }
+          const filteredProducts = products.filter(product => 
+            (route.key === 'all' || product.category.toLowerCase() === route.key) &&
+            product.title.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+
+          return renderProducts(filteredProducts);
         }}
         onIndexChange={setIndex}
         renderTabBar={(props) => (
           <TabBar 
             {...props} 
+            indicatorStyle={styles.indicator} 
             style={styles.tabBar} 
-            indicatorStyle={{ backgroundColor: '#4682B4' }} 
-            renderLabel={({ route, focused }: { route: { key: string; title: string }; focused: boolean }) => (
-              <Text style={[styles.tabLabel, { color: focused ? '#4682B4' : '#333' }]}>
-                {route.title}
-              </Text>
-            )}
+            activeColor="#4682B4" 
+            inactiveColor="black" 
+            scrollEnabled={true}
+            labelStyle={styles.tabLabel}
           />
         )}
       />
@@ -108,29 +112,51 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   searchBox: {
-    margin: 10,
+    marginTop: 10,
+    marginBottom: 10,
     padding: 10,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
     backgroundColor: '#fff',
   },
-  tabBar: {
-    backgroundColor: '#4682B4',
+  categoryList: {
+    marginVertical: 10,
+    padding: 10,
+    backgroundColor: '#fff',
+    borderRadius: 10,
     elevation: 2,
-    marginBottom: 20,
-    borderTopStartRadius: 10,
-    borderTopEndRadius: 10,
-    color: '#000'
+  },
+  categoryTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  categoryItem: {
+    fontSize: 14,
+    color: '#555',
+  },
+  tabBar: {
+    backgroundColor: 'white',
+    elevation: 2,
+    marginBottom: 10
+  },
+  indicator: {
+    backgroundColor: '#4682B4',
   },
   tabLabel: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    textTransform: 'capitalize',
   },
   productList: {
     paddingBottom: 20,
     paddingHorizontal: 5,
+  },
+  actionArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent:'space-between',
   },
   productCard: {
     flexDirection: 'row',
@@ -165,6 +191,19 @@ const styles = StyleSheet.create({
   },
   favoriteButton: {
     marginTop: 5,
+  },
+  viewDetailButton: {
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    backgroundColor: '#4682B4',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  viewDetailText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   backButton: {
     marginBottom: 10,

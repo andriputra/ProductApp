@@ -1,19 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Button, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import ProductListScreen from '../screens/ProductListScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
 import CartScreen from '../screens/CartScreen';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
 
 const AppNavigator = () => {
+  const cartTotal = useSelector((state: RootState) => state.cart.totalQuantity);
+  const cartItems = useSelector((state: RootState) => state.cart.items);
   const [screen, setScreen] = useState<'ProductList' | 'ProductDetail' | 'Cart'>('ProductList');
   const [selectedProduct, setSelectedProduct] = useState<{ id: string; title: string; price: number; thumbnail: string } | null>(null);
-  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    console.log("Cart updated:", cartItems);
+  }, [cartItems]);
 
   const HeaderBar = () => (
     <View style={styles.header}>
       <Text style={styles.headerTitle}>{screen === 'ProductList' ? 'Products App' : screen === 'ProductDetail' ? 'Product Detail' : 'Cart'}</Text>
       <TouchableOpacity onPress={() => setScreen('Cart')} style={styles.cartIcon}>
-        <Text style={styles.cartText}>🛒 {cartCount}</Text>
+      <Text style={styles.cartText}>🛒 {cartTotal}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -32,7 +39,7 @@ const AppNavigator = () => {
           product={selectedProduct} 
           onBack={() => setScreen('ProductList')} 
           onGoToCart={() => setScreen('Cart')} 
-          setCartCount={setCartCount} 
+          cartTotal={cartTotal}
         />
       )}
       {screen === 'Cart' && (
