@@ -3,13 +3,15 @@ import { View, Button, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import ProductListScreen from '../screens/ProductListScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
 import CartScreen from '../screens/CartScreen';
+import FavoriteScreen from '../screens/FavoriteScreen';
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
 
 const AppNavigator = () => {
   const cartTotal = useSelector((state: RootState) => state.cart.totalQuantity);
+  const favoriteTotal = useSelector((state: RootState) => state.favorites.totalFavorites);
   const cartItems = useSelector((state: RootState) => state.cart.items);
-  const [screen, setScreen] = useState<'ProductList' | 'ProductDetail' | 'Cart'>('ProductList');
+  const [screen, setScreen] = useState<'ProductList' | 'ProductDetail' | 'Cart' | 'Favorites'>('ProductList');
   const [selectedProduct, setSelectedProduct] = useState<{ id: string; title: string; price: number; thumbnail: string } | null>(null);
 
   useEffect(() => {
@@ -19,9 +21,14 @@ const AppNavigator = () => {
   const HeaderBar = () => (
     <View style={styles.header}>
       <Text style={styles.headerTitle}>{screen === 'ProductList' ? 'Products App' : screen === 'ProductDetail' ? 'Product Detail' : 'Cart'}</Text>
-      <TouchableOpacity onPress={() => setScreen('Cart')} style={styles.cartIcon}>
-      <Text style={styles.cartText}>🛒 {cartTotal}</Text>
-      </TouchableOpacity>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <TouchableOpacity onPress={() => setScreen('Favorites')} style={styles.favoriteIcon}>
+          <Text style={styles.favoriteText}>❤️ {favoriteTotal}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setScreen('Cart')} style={styles.cartIcon}>
+          <Text style={styles.cartText}>🛒 {cartTotal}</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -44,6 +51,9 @@ const AppNavigator = () => {
       )}
       {screen === 'Cart' && (
         <CartScreen onBack={() => setScreen('ProductList')} />
+      )}
+      {screen === 'Favorites' && (
+        <FavoriteScreen onBack={() => setScreen('ProductList')} />
       )}
     </View>
   );
@@ -72,6 +82,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#4682B4',
+  },
+  favoriteIcon: {
+    backgroundColor: 'white',
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  favoriteText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#D32F2F',
   },
 });
 

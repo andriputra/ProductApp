@@ -8,15 +8,16 @@ import ProductDetailScreen from './ProductDetailScreen';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faHeart as solidHeart } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as regularHeart } from '@fortawesome/free-regular-svg-icons';
+import { toggleFavorite } from '../redux/favoritesSlice';
 
-type Product = { id: number; title: string; category: string; thumbnail: string; price: number };
+type Product = { id: number; title: string; description: string; category: string; thumbnail: string; price: number };
 
 const ProductListScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
   const products = useSelector((state: RootState) => state.products.products) as Product[];
   const [index, setIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const favorites = useSelector((state: RootState) => state.favorites.items);
   const [screen, setScreen] = useState<'list' | 'detail'>();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [uniqueCategories, setUniqueCategories] = useState<string[]>([]);
@@ -34,8 +35,8 @@ const ProductListScreen = () => {
     }
   }, [products]);
 
-  const toggleFavorite = (id: number) => {
-    setFavorites((prev) => (prev.includes(id) ? prev.filter(fav => fav !== id) : [...prev, id]));
+  const handleToggleFavorite = (id: number) => {
+    dispatch(toggleFavorite(id));
   };
 
   const renderProducts = (filteredProducts: Product[]) => (
@@ -51,7 +52,7 @@ const ProductListScreen = () => {
             <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.price}>${item.price}</Text>
             <View style={styles.actionArea}>
-              <TouchableOpacity onPress={() => toggleFavorite(item.id)} style={styles.favoriteButton}>
+              <TouchableOpacity onPress={() => handleToggleFavorite(item.id)} style={styles.favoriteButton}>
                 <FontAwesomeIcon icon={favorites.includes(item.id) ? solidHeart : regularHeart} size={20} color={favorites.includes(item.id) ? 'red' : 'gray'} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.viewDetailButton} onPress={() => { setSelectedProduct(item); setScreen('detail'); }}>
@@ -65,7 +66,7 @@ const ProductListScreen = () => {
   );
 
   return screen === 'detail' && selectedProduct ? (
-    <ProductDetailScreen item={selectedProduct} onBack={() => setScreen('list')} />
+    <ProductDetailScreen item={selectedProduct} onBack={() => setScreen('list')} cartTotal={0} />
   ) : (
     <View style={styles.container}>
       <TextInput 
