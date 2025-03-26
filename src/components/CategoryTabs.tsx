@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 const categories = ['All', 'Smartphones', 'Laptops', 'Fragrances', 'Skincare'];
 
-const CategoryTabs = ({ selectedCategory, onSelectCategory }) => {
+const CategoryTabs = ({ selectedCategory, onSelectCategory }: { selectedCategory: string; onSelectCategory: (category: string) => void }) => {
   return (
     <View style={styles.container}>
       {categories.map((category) => (

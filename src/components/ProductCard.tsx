@@ -1,7 +1,14 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 
-const ProductCard = ({ item, onPress }) => {
+interface Product {
+  id: string;
+  title: string;
+  price: number;
+  thumbnail: string;
+}
+
+const ProductCard = ({ item, onPress }: { item: Product; onPress: () => void }) => {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <Image source={{ uri: item.thumbnail }} style={styles.image} />

@@ -4,13 +4,11 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
 
 interface CartSummaryProps {
-  onCheckout: () => void;
+  onCheckout: () => void; // Pastikan ini bertipe function yang tidak mengembalikan nilai
 }
 
 const CartSummary: React.FC<CartSummaryProps> = ({ onCheckout }) => {
-console.log('CartSummary component rendered');
-console.log('Cart:', cart);
-console.log('Total:', total);  const cart = useSelector((state: RootState) => state.cart);
+  const cart = useSelector((state: RootState) => state.cart);
   const total = cart.reduce((sum, item) => sum + item.price, 0);
 
   return (
